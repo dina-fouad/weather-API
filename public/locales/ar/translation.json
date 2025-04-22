@@ -1,0 +1,20 @@
+{
+   "Gaza" : "غزة الحبيبة",
+   "Amman" : "عمان",
+   "Damascus" : "دمشق",
+   "Cairo" : "القاهرة",
+   "Beirut" : "بيروت",
+   "Makkah al Mukarramah": "مكة المكرمة",
+   "Rabat": "الرباط",
+   "Istanbul" : "اسطنبول",
+   "Grozny" : "غروزني",
+   "clear sky" :"سماء صافية",
+   "few clouds" : "غيوم قليلة",
+   "scattered clouds" : "غيوم متفرقة",
+   "broken clouds" : "غيوم متقطعة",
+   "shower rain" : "زخات أمطار",
+   "rain" : "مطر",
+   "thunderstorm": "عاصفة رعدية",
+   "snow" : "ثلج",
+   "mist": "ضباب"
+}
