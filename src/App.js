@@ -10,29 +10,51 @@ import {
   Select,
 } from "@mui/material";
 import CloudIcon from "@mui/icons-material/Cloud";
-import axios from "axios";
 import moment from "moment";
 import "moment/min/locales";
 import { useTranslation } from "react-i18next";
+import { changeCity, fetchWeather } from "./weatherSlice";
+import { changeBackGround ,changeLanguage} from "./weatherSlice";
+import { useSelector, useDispatch } from "react-redux";
+import CircularProgress from "@mui/material/CircularProgress";
 
-let cancelAxios = null;
+
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [weather, setWeather] = useState({});
-  const [language, setLanguage] = useState("en");
-  const [cityName, setCityName] = useState("gaza,ps");
-  const [backGroundCity, setBackGroundCity] = useState(cityName);
+  const dispatch = useDispatch();
+
+  const cityName = useSelector((state) => {
+    return state.weather.result;
+  });
+
+  const isLoading = useSelector((state) => {
+    return state.weather.isLoading;
+  });
+
+  const weather = useSelector((state) => {
+    return state.weather.weather;
+  });
+
+  const backGroundCity = useSelector((state) => {
+    return state.weather.backgCity;
+  });
+
+
+  const language = useSelector((state) =>{
+       return state.weather.language
+  })
 
   function handelTrans() {
+  
     if (language === "en") {
       moment.locale("ar");
       i18n.changeLanguage("ar");
-      setLanguage("ar");
+      dispatch(changeLanguage("ar"))
     } else {
       moment.locale("en");
       i18n.changeLanguage("en");
-      setLanguage("en");
+      dispatch(changeLanguage("en"))
     }
   }
 
@@ -40,80 +62,13 @@ function App() {
     return language === "ar" ? "English" : "العربية";
   }
 
-  useEffect(() => {
-    let amman =
-      "https://images.unsplash.com/photo-1627734633024-867b54f26e1f?q=80&w=1932&auto=format&fit=crop";
-    let gaza =
-      "https://www.aljazeera.com/wp-content/uploads/2025/02/image-1738850613.jpg?resize=1800%2C1080&quality=80";
-    let damascus =
-      "https://images.unsplash.com/photo-1713252883649-340c3802390e?q=80&w=1945&auto=format&fit=crop";
-    let cairo =
-      "https://images.unsplash.com/photo-1539768942893-daf53e448371?q=80&w=2071&auto=format&fit=crop";
-    let beirut =
-      "https://images.unsplash.com/photo-1632854269541-dfff1eb1646f?q=80&w=2055&auto=format&fit=crop";
-    let makka =
-      "https://c0.wallpaperflare.com/preview/825/272/872/abu-dhabi-mosque-religion-minaret.jpg";
-    let rabat =
-      "https://www.planetware.com/photos-large/MAR/morocco-rabat-new-city-main-avenue.jpg";
-    let grozny =
-      "https://www.airpano.com/photogallery/images_1550/90_581525_RussiaAkhmadKadyrovMosqueGrozny.jpg";
-    let istanbul =
-      "https://cdn.pixabay.com/photo/2017/02/24/00/11/bridge-2093540_1280.jpg";
-
-    if (cityName.includes("gaza")) {
-      setBackGroundCity(gaza);
-    } else if (cityName.includes("amman")) {
-      setBackGroundCity(amman);
-    } else if (cityName.includes("damascus")) {
-      setBackGroundCity(damascus);
-    } else if (cityName.includes("cairo")) {
-      setBackGroundCity(cairo);
-    } else if (cityName.includes("beirut")) {
-      setBackGroundCity(beirut);
-    } else if (cityName.includes("Makkah al Mukarramah")) {
-      setBackGroundCity(makka);
-    } else if (cityName.includes("rabat")) {
-      setBackGroundCity(rabat);
-    } else if (cityName.includes("grozny")) {
-      setBackGroundCity(grozny);
-    } else if (cityName.includes("istanbul")) {
-      setBackGroundCity(istanbul);
-    }
-  }, [cityName]);
+  function cityNameHandler(event) {
+    const nameCity = event.target.value;
+    dispatch(changeCity({ nameCity }));
+  }
 
   useEffect(() => {
-    axios
-      .get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=f83d92c4c1cbc8bf9d940af746a73248`,
-        {
-          cancelToken: new axios.CancelToken((c) => {
-            cancelAxios = c;
-          }),
-        }
-      )
-      .then((response) => {
-        let temp = response.data.main.temp;
-        let tempC = Math.round(temp - 273.15);
-        let tempMax = Math.round(response.data.main.temp_max - 273.15);
-        let tempMin = Math.round(response.data.main.temp_min - 273.15);
-        let icon = `https://openweathermap.org/img/wn/${response.data.weather[0].icon}@2x.png`;
-        let dataWeather = {
-          city: response.data.name,
-          temp: tempC,
-          description: response.data.weather[0].description,
-          tempMax: tempMax,
-          tempMin: tempMin,
-          icon: icon,
-        };
-        setWeather(dataWeather);
-      })
-      .catch((error) => {
-        setWeather("There was an error!", error);
-      });
-
-    return () => {
-      cancelAxios();
-    };
+    dispatch(fetchWeather({ cityName }));
   }, [cityName]);
 
   return (
@@ -144,7 +99,6 @@ function App() {
           overflow: "hidden",
         }}
       >
-     
         <Box
           key={backGroundCity}
           sx={{
@@ -168,7 +122,6 @@ function App() {
             pt: 10,
           }}
         >
-        
           <Box
             sx={{
               mb: 2,
@@ -187,27 +140,123 @@ function App() {
               variant="standard"
               disableUnderline
               value={cityName}
-              onChange={(e) => setCityName(e.target.value)}
+              onChange={cityNameHandler}
               sx={{
                 fontWeight: "bold",
                 color: "#1e293b",
               }}
             >
-              <MenuItem value="gaza,ps">{t("Gaza")}</MenuItem>
-              <MenuItem value="amman,jo">{t("Amman")}</MenuItem>
-              <MenuItem value="damascus,sy">{t("Damascus")}</MenuItem>
-              <MenuItem value="cairo,eg">{t("Cairo")}</MenuItem>
-              <MenuItem value="beirut,lb">{t("Beirut")}</MenuItem>
-              <MenuItem value="Makkah al Mukarramah,sa">
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://www.aljazeera.com/wp-content/uploads/2025/02/image-1738850613.jpg?resize=1800%2C1080&quality=80"
+                    )
+                  );
+                }}
+                value="gaza,ps"
+              >
+                {t("Gaza")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://images.unsplash.com/photo-1627734633024-867b54f26e1f?q=80&w=1932&auto=format&fit=crop"
+                    )
+                  );
+                }}
+                value="amman,jo"
+              >
+                {t("Amman")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://images.unsplash.com/photo-1713252883649-340c3802390e?q=80&w=1945&auto=format&fit=crop"
+                    )
+                  );
+                }}
+                value="damascus,sy"
+              >
+                {t("Damascus")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://images.unsplash.com/photo-1539768942893-daf53e448371?q=80&w=2071&auto=format&fit=crop"
+                    )
+                  );
+                }}
+                value="cairo,eg"
+              >
+                {t("Cairo")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://images.unsplash.com/photo-1632854269541-dfff1eb1646f?q=80&w=2055&auto=format&fit=crop"
+                    )
+                  );
+                }}
+                value="beirut,lb"
+              >
+                {t("Beirut")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://c0.wallpaperflare.com/preview/825/272/872/abu-dhabi-mosque-religion-minaret.jpg"
+                    )
+                  );
+                }}
+                value="Makkah al Mukarramah,sa"
+              >
                 {t("Makkah al Mukarramah")}
               </MenuItem>
-              <MenuItem value="rabat,ma">{t("Rabat")}</MenuItem>
-              <MenuItem value="grozny,ru">{t("Grozny")}</MenuItem>
-              <MenuItem value="istanbul,tr">{t("Istanbul")}</MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://www.planetware.com/photos-large/MAR/morocco-rabat-new-city-main-avenue.jpg"
+                    )
+                  );
+                }}
+                value="rabat,ma"
+              >
+                {t("Rabat")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://www.airpano.com/photogallery/images_1550/90_581525_RussiaAkhmadKadyrovMosqueGrozny.jpg"
+                    )
+                  );
+                }}
+                value="grozny,ru"
+              >
+                {t("Grozny")}
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  dispatch(
+                    changeBackGround(
+                      "https://cdn.pixabay.com/photo/2017/02/24/00/11/bridge-2093540_1280.jpg"
+                    )
+                  );
+                }}
+                value="istanbul,tr"
+              >
+                {t("Istanbul")}
+              </MenuItem>
             </Select>
           </Box>
 
-          
           <Card
             sx={{
               width: 360,
@@ -243,6 +292,7 @@ function App() {
                   }}
                 >
                   {t(weather.city)}
+                  
                 </Typography>
                 <Typography
                   variant="body2"
@@ -296,6 +346,7 @@ function App() {
                   alt={weather.description}
                   sx={{ width: 70, height: 70 }}
                 />
+                {isLoading ? <CircularProgress /> : ""}
               </Box>
 
               <Box
@@ -316,6 +367,7 @@ function App() {
                   sx={{ color: "#475569", fontWeight: 500 }}
                 >
                   {t(weather.description)}
+                 
                 </Typography>
               </Box>
 
@@ -347,7 +399,6 @@ function App() {
             </CardContent>
           </Card>
 
-        
           <Box
             sx={{
               mt: 2,
